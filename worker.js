@@ -3,7 +3,6 @@ addEventListener('fetch', event => {
 });
 
 async function fetchAndStream(request) {
-    console.log(request)
     // 从请求中获取json数据
     if (new URL(request.url).pathname === '/v1/chat/completions') {
         return handleChatCompletionsRequest(request);
@@ -88,8 +87,8 @@ async function handleChatCompletionsRequest(request) {
     let tokenData = await tokenResponse.json();
     let access_token = tokenData.token;
     let uuidValue = await uuid();
-    let sessionId = uuidValue  + Date.now();
-    let machineId = await sha256(uuidValue );
+    let sessionId = uuidValue + Date.now();
+    let machineId = await sha256(uuidValue);
 
     // 构建新的请求头部
     let acc_headers = {
@@ -115,21 +114,20 @@ async function handleChatCompletionsRequest(request) {
     });
     // 如果stream为true，返回流式响应
     if (stream) {
-        // todo: hook 内容去掉null，目前字节断流，无法按行处理
-        // let { readable, writable } = new TransformStream({
-        //   async transform(chunk, controller) {
-        //     // 在这里对数据进行修改，chunk是每次读取到的数据块
+        // let { readable, writable } = new TransformStream();
+        let { readable, writable } = new TransformStream({
+          async transform(chunk, controller) {
+            // 在这里对数据进行修改，chunk是每次读取到的数据块
 
-        //     // 例如，将数据块转为字符串，修改内容，然后再转回为Uint8Array
-        //     let text = new TextDecoder().decode(chunk);
-        //     let modifiedText = modifyContent(text);
-        //     let modifiedChunk = new TextEncoder().encode(modifiedText);
+            // 例如，将数据块转为字符串，修改内容，然后再转回为Uint8Array
+            let text = new TextDecoder().decode(chunk);
+            let modifiedText = text.replace(/"content":null/g, '"content":""');
+            let modifiedChunk = new TextEncoder().encode(modifiedText);
 
-        //     // 将修改后的数据块写入可写流
-        //     controller.enqueue(modifiedChunk);
-        //   },
-        // });
-        let { readable, writable } = new TransformStream();
+            // 将修改后的数据块写入可写流
+            controller.enqueue(modifiedChunk);
+          },
+        });
         // Start pumping the body. NOTE: No await!
         copilotResponse.body.pipeTo(writable);
 
