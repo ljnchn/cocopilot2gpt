@@ -155,19 +155,12 @@ func forwardRequest(c *gin.Context) {
 
 	c.Header("Content-Type", "text/event-stream; charset=utf-8")
 
-	// 创建一个缓冲读取器
-	reader := bufio.NewReader(resp.Body)
+	// 创建一个新的扫描器
+	scanner := bufio.NewScanner(resp.Body)
 
-	// 读取流并替换 "content":null 为 "content":""
-	for {
-		line, err := reader.ReadBytes('\n')
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
-			return
-		}
+	// 使用Scan方法来读取流
+	for scanner.Scan() {
+		line := scanner.Bytes()
 
 		// 替换 "content":null 为 "content":""
 		modifiedLine := bytes.Replace(line, []byte(`"content":null`), []byte(`"content":""`), -1)
@@ -177,6 +170,18 @@ func forwardRequest(c *gin.Context) {
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
+
+		// 添加一个换行符
+		if _, err := c.Writer.Write([]byte("\n")); err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+	}
+
+	if scanner.Err() != nil {
+		// 处理来自扫描器的任何错误
+		c.AbortWithError(http.StatusInternalServerError, scanner.Err())
+		return
 	}
 	return
 }
