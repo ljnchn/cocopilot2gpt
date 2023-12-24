@@ -39,7 +39,7 @@ type ModelList struct {
 	Data   []Model `json:"data"`
 }
 
-var port = "8080"
+var port = "8081"
 var ghuToken = ""
 
 func main() {
@@ -75,7 +75,14 @@ func main() {
 	})
 
 	r.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, "")
+		c.String(http.StatusOK, `
+		curl --location 'http://127.0.0.1:8081/v1/chat/completions' \
+		--header 'Content-Type: application/json' \
+		--header 'Authorization: Bearer gho_xxx' \
+		--data '{
+		  "model": "gpt-4",
+		  "messages": [{"role": "user", "content": "hi"}]
+		}'`)
 	})
 
 	r.GET("/v1/models", func(c *gin.Context) {
@@ -148,7 +155,7 @@ func forwardRequest(c *gin.Context) {
 		bodyString := string(bodyBytes)
 		log.Printf("对话失败：%d, %s ", resp.StatusCode, bodyString)
 		cache := cache.New(5*time.Minute, 10*time.Minute)
-		cache.Delete("token")
+		cache.Delete(ghuToken)
 		c.AbortWithError(resp.StatusCode, err)
 		return
 	}
@@ -190,11 +197,38 @@ func models() ModelList {
 	jsonStr := `{
         "object": "list",
         "data": [
-            {"id": "gpt-4-0314", "object": "model", "created": 1687882410, "owned_by": "openai", "root": "gpt-4-0314", "parent": null},
-            {"id": "gpt-4-0613", "object": "model", "created": 1686588896, "owned_by": "openai", "root": "gpt-4-0613", "parent": null},
-            {"id": "gpt-4", "object": "model", "created": 1687882411, "owned_by": "openai", "root": "gpt-4", "parent": null},
-            {"id": "gpt-3.5-turbo", "object": "model", "created": 1677610602, "owned_by": "openai", "root": "gpt-3.5-turbo", "parent": null},
-            {"id": "gpt-3.5-turbo-0301", "object": "model", "created": 1677649963, "owned_by": "openai", "root": "gpt-3.5-turbo-0301", "parent": null}
+            {"id": "text-search-babbage-doc-001","object": "model","created": 1651172509,"owned_by": "openai-dev"},
+            {"id": "gpt-4-0613","object": "model","created": 1686588896,"owned_by": "openai"},
+            {"id": "gpt-4", "object": "model", "created": 1687882411, "owned_by": "openai"},
+            {"id": "babbage", "object": "model", "created": 1649358449, "owned_by": "openai"},
+            {"id": "gpt-3.5-turbo-0613", "object": "model", "created": 1686587434, "owned_by": "openai"},
+            {"id": "text-babbage-001", "object": "model", "created": 1649364043, "owned_by": "openai"},
+            {"id": "gpt-3.5-turbo", "object": "model", "created": 1677610602, "owned_by": "openai"},
+            {"id": "gpt-3.5-turbo-1106", "object": "model", "created": 1698959748, "owned_by": "system"},
+            {"id": "curie-instruct-beta", "object": "model", "created": 1649364042, "owned_by": "openai"},
+            {"id": "gpt-3.5-turbo-0301", "object": "model", "created": 1677649963, "owned_by": "openai"},
+            {"id": "gpt-3.5-turbo-16k-0613", "object": "model", "created": 1685474247, "owned_by": "openai"},
+            {"id": "text-embedding-ada-002", "object": "model", "created": 1671217299, "owned_by": "openai-internal"},
+            {"id": "davinci-similarity", "object": "model", "created": 1651172509, "owned_by": "openai-dev"},
+            {"id": "curie-similarity", "object": "model", "created": 1651172510, "owned_by": "openai-dev"},
+            {"id": "babbage-search-document", "object": "model", "created": 1651172510, "owned_by": "openai-dev"},
+            {"id": "curie-search-document", "object": "model", "created": 1651172508, "owned_by": "openai-dev"},
+            {"id": "babbage-code-search-code", "object": "model", "created": 1651172509, "owned_by": "openai-dev"},
+            {"id": "ada-code-search-text", "object": "model", "created": 1651172510, "owned_by": "openai-dev"},
+            {"id": "text-search-curie-query-001", "object": "model", "created": 1651172509, "owned_by": "openai-dev"},
+            {"id": "text-davinci-002", "object": "model", "created": 1649880484, "owned_by": "openai"},
+            {"id": "ada", "object": "model", "created": 1649357491, "owned_by": "openai"},
+            {"id": "text-ada-001", "object": "model", "created": 1649364042, "owned_by": "openai"},
+            {"id": "ada-similarity", "object": "model", "created": 1651172507, "owned_by": "openai-dev"},
+            {"id": "code-search-ada-code-001", "object": "model", "created": 1651172507, "owned_by": "openai-dev"},
+            {"id": "text-similarity-ada-001", "object": "model", "created": 1651172505, "owned_by": "openai-dev"},
+            {"id": "text-davinci-edit-001", "object": "model", "created": 1649809179, "owned_by": "openai"},
+            {"id": "code-davinci-edit-001", "object": "model", "created": 1649880484, "owned_by": "openai"},
+            {"id": "text-search-curie-doc-001", "object": "model", "created": 1651172509, "owned_by": "openai-dev"},
+            {"id": "text-curie-001", "object": "model", "created": 1649364043, "owned_by": "openai"},
+            {"id": "curie", "object": "model", "created": 1649359874, "owned_by": "openai"},
+            {"id": "davinci", "object": "model", "created": 1649359874, "owned_by": "openai"},
+            {"id": "gpt-4-0314", "object": "model", "created": 1687882410, "owned_by": "openai"}
         ]
     }`
 
@@ -207,7 +241,7 @@ func getAccToken(ghuToken string) (string, error) {
 	var accToken = ""
 
 	cache := cache.New(15*time.Minute, 60*time.Minute)
-	cacheToken, found := cache.Get("token")
+	cacheToken, found := cache.Get(ghuToken)
 	if found {
 		accToken = cacheToken.(string)
 	} else {
@@ -249,7 +283,7 @@ func getAccToken(ghuToken string) (string, error) {
 			if accToken == "" {
 				return accToken, fmt.Errorf("acc_token 未返回")
 			}
-			cache.Set("token", accToken, 14*time.Minute)
+			cache.Set(ghuToken, accToken, 14*time.Minute)
 		} else {
 			log.Printf("获取 acc_token 请求失败：%d, %s ", resp.StatusCode, string(body))
 			return accToken, fmt.Errorf("获取 acc_token 请求失败： %d", resp.StatusCode)
@@ -260,30 +294,33 @@ func getAccToken(ghuToken string) (string, error) {
 
 func getHeaders(ghoToken string) map[string]string {
 	return map[string]string{
-		"Host":                  "api.github.com",
-		"Authorization":         "token " + ghoToken,
-		"Editor-Version":        "vscode/1.84.2",
-		"Editor-Plugin-Version": "copilot/1.138.0",
-		"User-Agent":            "GithubCopilot/1.138.0",
+		"Host":          "api.github.com",
+		"Authorization": "token " + ghoToken,
+
+		"Editor-Version":        "vscode/1.85.0",
+		"Editor-Plugin-Version": "copilot-chat/0.11.1",
+		"User-Agent":            "GitHubCopilotChat/0.11.1",
 		"Accept":                "*/*",
 		"Accept-Encoding":       "gzip, deflate, br",
-		"Connection":            "close",
 	}
 }
 
 func getAccHeaders(accessToken, uuid string, sessionId string, machineId string) map[string]string {
 	return map[string]string{
-		"Authorization":         "Bearer " + accessToken,
-		"X-Request-Id":          uuid,
-		"Vscode-Sessionid":      sessionId,
-		"Vscode-machineid":      machineId,
-		"Editor-Version":        "vscode/1.84.2",
-		"Editor-Plugin-Version": "copilot-chat/0.10.2",
-		"Openai-Organization":   "github-copilot",
-		"Openai-Intent":         "conversation-panel",
-		"Content-Type":          "application/json",
-		"User-Agent":            "GitHubCopilotChat/0.10.2",
-		"Accept":                "*/*",
-		"Accept-Encoding":       "gzip, deflate, br",
+		"Host":                   "api.githubcopilot.com",
+		"Authorization":          "Bearer " + accessToken,
+		"X-Request-Id":           uuid,
+		"X-Github-Api-Version":   "2023-07-07",
+		"Vscode-Sessionid":       sessionId,
+		"Vscode-machineid":       machineId,
+		"Editor-Version":         "vscode/1.85.0",
+		"Editor-Plugin-Version":  "copilot-chat/0.11.1",
+		"Openai-Organization":    "github-copilot",
+		"Openai-Intent":          "conversation-panel",
+		"Content-Type":           "application/json",
+		"User-Agent":             "GitHubCopilotChat/0.11.1",
+		"Copilot-Integration-Id": "vscode-chat",
+		"Accept":                 "*/*",
+		"Accept-Encoding":        "gzip, deflate, br",
 	}
 }
