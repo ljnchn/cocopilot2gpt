@@ -78,7 +78,7 @@ func main() {
 		c.String(http.StatusOK, `
 		curl --location 'http://127.0.0.1:8081/v1/chat/completions' \
 		--header 'Content-Type: application/json' \
-		--header 'Authorization: Bearer gho_xxx' \
+		--header 'Authorization: Bearer ghu_xxx' \
 		--data '{
 		  "model": "gpt-4",
 		  "messages": [{"role": "user", "content": "hi"}]
@@ -132,6 +132,8 @@ func forwardRequest(c *gin.Context) {
 		return
 	}
 
+	isStream := gjson.GetBytes(jsonData, "stream").String() == "true"
+
 	req, err := http.NewRequest("POST", completionsUrl, bytes.NewBuffer(jsonData))
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
@@ -160,6 +162,57 @@ func forwardRequest(c *gin.Context) {
 		return
 	}
 
+	if isStream {
+		returnStream(c, resp)
+	} else {
+		returnJson(c, resp)
+	}
+
+	c.Header("Content-Type", "text/event-stream; charset=utf-8")
+
+	// 创建一个新的扫描器
+	scanner := bufio.NewScanner(resp.Body)
+
+	// 使用Scan方法来读取流
+	for scanner.Scan() {
+		line := scanner.Bytes()
+
+		// 替换 "content":null 为 "content":""
+		modifiedLine := bytes.Replace(line, []byte(`"content":null`), []byte(`"content":""`), -1)
+
+		// 将修改后的数据写入响应体
+		if _, err := c.Writer.Write(modifiedLine); err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+
+		// 添加一个换行符
+		if _, err := c.Writer.Write([]byte("\n")); err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+	}
+
+	if scanner.Err() != nil {
+		// 处理来自扫描器的任何错误
+		c.AbortWithError(http.StatusInternalServerError, scanner.Err())
+		return
+	}
+	return
+}
+
+func returnJson(c *gin.Context, resp *http.Response) {
+	body, err := io.ReadAll(resp.Body.(io.Reader))
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.Writer.Write(body)
+	return
+}
+
+func returnStream(c *gin.Context, resp *http.Response) {
 	c.Header("Content-Type", "text/event-stream; charset=utf-8")
 
 	// 创建一个新的扫描器
