@@ -39,6 +39,7 @@ type ModelList struct {
 	Data   []Model `json:"data"`
 }
 
+var version = "v0.2"
 var port = "8081"
 var ghuToken = ""
 
@@ -53,7 +54,7 @@ func main() {
 		ghuToken = os.Getenv("GHU_TOKEN")
 	}
 
-	log.Printf("Server is running on port %s, with ghu: %s", port, ghuToken)
+	log.Printf("Server is running on port %s, version: %s, ghu: %s", port, version, ghuToken)
 
 	gin.SetMode(gin.ReleaseMode)
 

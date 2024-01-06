@@ -19,23 +19,23 @@ release:
 		# Build for arm
 		go clean
 		CGO_ENABLED=0 GOOS=linux GOARCH=arm64 GO111MODULE=on go build -ldflags "-s -w -X main.Version=${VERSION}"
-		tar czvf ${DIST_DIR}/${BINARY}-arm64-${VERSION}.tar.gz ./${BINARY} .env
+		tar czvf ${DIST_DIR}/${BINARY}-linux-arm64-${VERSION}.tar.gz ./${BINARY} .env
 		# Build for linux386
 		go clean
 		CGO_ENABLED=0 GOOS=linux GOARCH=386 GO111MODULE=on go build -ldflags "-s -w -X main.Version=${VERSION}"
-		tar czvf ${DIST_DIR}/${BINARY}-linux386-${VERSION}.tar.gz ./${BINARY} .env
+		tar czvf ${DIST_DIR}/${BINARY}-linux-386-${VERSION}.tar.gz ./${BINARY} .env
 		# Build for linux
 		go clean
 		CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -ldflags "-s -w -X main.Version=${VERSION}"
-		tar czvf ${DIST_DIR}/${BINARY}-linux64-${VERSION}.tar.gz ./${BINARY} .env
+		tar czvf ${DIST_DIR}/${BINARY}-linux-64-${VERSION}.tar.gz ./${BINARY} .env
 		# Build for win386
 		go clean
 		CGO_ENABLED=0 GOOS=windows GOARCH=386 GO111MODULE=on go build -ldflags "-s -w -X main.Version=${VERSION}"
-		tar czvf ${DIST_DIR}/${BINARY}-win386-${VERSION}.tar.gz ./${BINARY}.exe .env
+		tar czvf ${DIST_DIR}/${BINARY}-win-386-${VERSION}.tar.gz ./${BINARY}.exe .env
 		# Build for win
 		go clean
 		CGO_ENABLED=0 GOOS=windows GOARCH=amd64 GO111MODULE=on go build -ldflags "-s -w -X main.Version=${VERSION}"
-		tar czvf ${DIST_DIR}/${BINARY}-win64-${VERSION}.tar.gz ./${BINARY}.exe .env
+		tar czvf ${DIST_DIR}/${BINARY}-win-64-${VERSION}.tar.gz ./${BINARY}.exe .env
 		go clean
 # Cleans our projects: deletes binaries
 clean:
