@@ -8,17 +8,9 @@
 
 
 
-## ghp token 获取
+## ghu token 获取
 
-1. 首先，您需要登录 GitHub 账号。
-
-2. 在右上角，点击头像然后选择设置（Settings）。
-
-3. 在左侧菜单，点击开发者设置（Developer settings）。
-
-4. 点击个人访问令牌 （Personal access tokens）。
-
-5. 点击生成新令牌（Generate new token）
+点击链接：[cocopilot](https://cocopilot.org/copilot/token)，根据提示拿到 ghu_xxxx 格式的 token。务必保存好，不要泄露给其他人。
 
 ## 下载程序
 

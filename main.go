@@ -41,7 +41,6 @@ type ModelList struct {
 
 var version = "v0.2"
 var port = "8081"
-var ghuToken = ""
 
 func main() {
 	err := godotenv.Load()
@@ -51,10 +50,9 @@ func main() {
 		if portEnv != "" {
 			port = portEnv
 		}
-		ghuToken = os.Getenv("GHU_TOKEN")
 	}
 
-	log.Printf("Server is running on port %s, version: %s, ghu: %s", port, version, ghuToken)
+	log.Printf("Server is running on port %s, version: %s\n", port, version)
 
 	gin.SetMode(gin.ReleaseMode)
 
@@ -107,12 +105,18 @@ func forwardRequest(c *gin.Context) {
 		return
 	}
 
-	if ghuToken == "" {
-		ghuToken = strings.Split(c.GetHeader("Authorization"), " ")[1]
+	ghuToken := strings.Split(c.GetHeader("Authorization"), " ")[1]
+
+	if !strings.HasPrefix(ghuToken, "gh") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "auth token not found"})
+		log.Printf("token 格式错误：%s\n", ghuToken)
+		return
 	}
 
-	if ghuToken == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "gho_token not found"})
+	// 检查 token 是否有效
+	if !checkToken(ghuToken) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "auth token is invalid"})
+		log.Printf("token 无效：%s\n", ghuToken)
 		return
 	}
 	accToken, err := getAccToken(ghuToken)
@@ -344,6 +348,28 @@ func getAccToken(ghuToken string) (string, error) {
 		}
 	}
 	return accToken, nil
+}
+
+func checkToken(ghuToken string) bool {
+	client := &http.Client{}
+
+	url := "https://api.github.com/user"
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+	req.Header.Add("Accept", "application/vnd.github+json")
+	req.Header.Add("Authorization", "Bearer "+ghuToken)
+	req.Header.Add("X-GitHub-Api-Version", "2022-11-28")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+	defer resp.Body.Close()
+	return resp.StatusCode == http.StatusOK
 }
 
 func getHeaders(ghoToken string) map[string]string {
