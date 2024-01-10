@@ -24,6 +24,9 @@ import (
 
 const tokenUrl = "https://api.github.com/copilot_internal/v2/token"
 const completionsUrl = "https://api.githubcopilot.com/chat/completions"
+const embeddingsUrl = "https://api.githubcopilot.com/embeddings"
+
+var requestUrl = ""
 
 type Model struct {
 	ID      string  `json:"id"`
@@ -39,7 +42,7 @@ type ModelList struct {
 	Data   []Model `json:"data"`
 }
 
-var version = "v0.2"
+var version = "v0.3"
 var port = "8081"
 
 func main() {
@@ -92,6 +95,15 @@ func main() {
 		c.Header("Cache-Control", "no-cache, must-revalidate")
 		c.Header("Connection", "keep-alive")
 
+		requestUrl = completionsUrl
+		forwardRequest(c)
+	})
+
+	r.POST("/v1/embeddings", func(c *gin.Context) {
+		c.Header("Cache-Control", "no-cache, must-revalidate")
+		c.Header("Connection", "keep-alive")
+
+		requestUrl = embeddingsUrl
 		forwardRequest(c)
 	})
 
@@ -139,7 +151,7 @@ func forwardRequest(c *gin.Context) {
 
 	isStream := gjson.GetBytes(jsonData, "stream").String() == "true"
 
-	req, err := http.NewRequest("POST", completionsUrl, bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest("POST", requestUrl, bytes.NewBuffer(jsonData))
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 	}
@@ -163,7 +175,7 @@ func forwardRequest(c *gin.Context) {
 		log.Printf("对话失败：%d, %s ", resp.StatusCode, bodyString)
 		cache := cache.New(5*time.Minute, 10*time.Minute)
 		cache.Delete(ghuToken)
-		c.AbortWithError(resp.StatusCode, err)
+		c.AbortWithError(resp.StatusCode, fmt.Errorf(bodyString))
 		return
 	}
 

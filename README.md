@@ -18,6 +18,8 @@
 
 ## 运行程序
 
+`cp .env.example .env`
+
 `./copilot2gpt`
 
 默认监听端口为 8081，可以在 .env 中修改
@@ -41,6 +43,16 @@ curl --location 'http://127.0.0.1:8081/v1/chat/completions' \
   "model": "gpt-4",
   "messages": [{"role": "user", "content": "hi"}]
 }'
+```
+
+``` bash
+curl --location 'http://127.0.0.1:8081/v1/embeddings' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer ghu_xxx' \
+--data '{
+  "input":["Your text string goes here"],
+  "model":"text-embedding-ada-002"
+  }'
 ```
 
 
