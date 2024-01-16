@@ -12,6 +12,13 @@
 
 点击链接：[cocopilot](https://cocopilot.org/copilot/token)，根据提示拿到 ghu_xxxx 格式的 token。务必保存好，不要泄露给其他人。
 
+## docker 部署
+
+```
+docker run -d -p 8081:8081 ersichub/copilot2gpt
+
+```
+
 ## 下载程序
 
 点击右侧的 release 下载跟你运行环境一致的可执行文件
