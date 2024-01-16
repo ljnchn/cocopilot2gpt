@@ -14,7 +14,8 @@
 
 ## docker 部署
 
-```
+``` shell
+
 docker run -d -p 8081:8081 ersichub/copilot2gpt
 
 ```
