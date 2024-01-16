@@ -26,9 +26,14 @@ docker run -d -p 8081:8081 ersichub/copilot2gpt
 
 ## 运行程序
 
-`cp .env.example .env`
+``` shell
 
-`./copilot2gpt`
+cp .env.example .env
+
+./copilot2gpt
+
+```
+
 
 默认监听端口为 8081，可以在 .env 中修改
 
