@@ -42,7 +42,7 @@ type ModelList struct {
 	Data   []Model `json:"data"`
 }
 
-var version = "v0.3"
+var version = "v0.4"
 var port = "8081"
 
 func main() {
