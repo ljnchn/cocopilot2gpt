@@ -389,7 +389,7 @@ func getHeaders(ghoToken string) map[string]string {
 		"Host":          "api.github.com",
 		"Authorization": "token " + ghoToken,
 
-		"Editor-Version":        "vscode/1.85.0",
+		"Editor-Version":        "vscode/1.85.1",
 		"Editor-Plugin-Version": "copilot-chat/0.11.1",
 		"User-Agent":            "GitHubCopilotChat/0.11.1",
 		"Accept":                "*/*",
@@ -405,7 +405,7 @@ func getAccHeaders(accessToken, uuid string, sessionId string, machineId string)
 		"X-Github-Api-Version":   "2023-07-07",
 		"Vscode-Sessionid":       sessionId,
 		"Vscode-machineid":       machineId,
-		"Editor-Version":         "vscode/1.85.0",
+		"Editor-Version":         "vscode/1.85.1",
 		"Editor-Plugin-Version":  "copilot-chat/0.11.1",
 		"Openai-Organization":    "github-copilot",
 		"Openai-Intent":          "conversation-panel",
