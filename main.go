@@ -42,7 +42,7 @@ type ModelList struct {
 	Data   []Model `json:"data"`
 }
 
-var version = "v0.4"
+var version = "v0.5"
 var port = "8081"
 
 func main() {
@@ -179,13 +179,14 @@ func forwardRequest(c *gin.Context) {
 		return
 	}
 
+	c.Header("Content-Type", "application/json; charset=utf-8")
+
 	if isStream {
+		c.Header("Content-Type", "text/event-stream; charset=utf-8")
 		returnStream(c, resp)
 	} else {
 		returnJson(c, resp)
 	}
-
-	c.Header("Content-Type", "text/event-stream; charset=utf-8")
 
 	// 创建一个新的扫描器
 	scanner := bufio.NewScanner(resp.Body)
