@@ -1,7 +1,15 @@
 #!/bin/bash
 
+export VERSION=$1
+
+if [ -z "$VERSION" ]; then
+    echo "No version"
+    exit 1
+fi
+
+
 # Run make release with the specified version
-make release VERSION=v0.5
+make release VERSION="$VERSION"
 
 # Build the docker image
 sudo docker build -t copilot2gpt .

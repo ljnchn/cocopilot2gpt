@@ -1,0 +1,30 @@
+{{ define "auth/index.tmpl" }}
+<html>
+<h1>
+    {{ .title }}
+</h1>
+打开链接 <a href="https://github.com/login/device" target="__blank">https://github.com/login/device</a>
+<p>输入：{{ .userCode }}</p>
+
+<script>
+    var deviceCode = "{{ .deviceCode }}"
+    setInterval(function () {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/auth/check", true);
+        var formData = new FormData();
+        formData.append("deviceCode", deviceCode);
+        
+        xhr.onreadystatechange = function () {
+            console.log(xhr.responseText);
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                // 在这里处理请求成功后的逻辑
+                console.log(xhr.responseText);
+            }
+        };
+        xhr.send(formData);
+    }, 5500);
+
+</script>
+
+</html>
+{{ end }}

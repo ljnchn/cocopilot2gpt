@@ -68,7 +68,13 @@ curl --location 'http://127.0.0.1:8081/v1/embeddings' \
   }'
 ```
 
+### 程序打包
 
+``` shell
+
+./build.sh version
+
+```
 
 ## 感谢以下项目，灵感来自于VV佬
 

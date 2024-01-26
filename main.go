@@ -11,6 +11,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -44,6 +45,7 @@ type ModelList struct {
 
 var version = "v0.5"
 var port = "8081"
+var client_id = ""
 
 func main() {
 	err := godotenv.Load()
@@ -105,6 +107,68 @@ func main() {
 
 		requestUrl = embeddingsUrl
 		forwardRequest(c)
+	})
+
+	// 获取ghu
+	client_id = os.Getenv("CLIENT_ID")
+
+	r.LoadHTMLGlob("templates/**/*")
+	r.GET("/auth", func(c *gin.Context) {
+		if client_id == "" {
+			c.String(http.StatusOK, `clent id null`)
+			return
+		}
+		// 获取设备授权码
+		deviceCode, userCode, err := getDeviceCode()
+		if err != nil {
+			c.String(http.StatusOK, "获取设备码失败："+err.Error())
+			return
+		}
+
+		// 使用 deviceCode 和 userCode
+		fmt.Println("Device Code: ", deviceCode)
+		fmt.Println("User Code: ", userCode)
+
+		c.HTML(http.StatusOK, "auth/index.tmpl", gin.H{
+			"title":      "auth index",
+			"deviceCode": deviceCode,
+			"userCode":   userCode,
+		})
+	})
+
+	r.POST("/auth/check", func(c *gin.Context) {
+		returnData := map[string]string{
+			"code": "1",
+			"msg":  "",
+			"data": "",
+		}
+		if client_id == "" {
+			returnData["msg"] = "clent id null"
+			c.JSON(http.StatusOK, returnData)
+			return
+		}
+		deviceCode := c.PostForm("deviceCode")
+		if deviceCode == "" {
+			returnData["msg"] = "device code null"
+			c.JSON(http.StatusOK, returnData)
+			return
+		}
+		token, err := checkUserCode(deviceCode)
+		if err != nil {
+			returnData["msg"] = err.Error()
+			c.JSON(http.StatusOK, returnData)
+			return
+		}
+		if token == "" {
+			returnData["msg"] = "token null"
+			c.JSON(http.StatusOK, returnData)
+			return
+		}
+		returnData["code"] = "0"
+		returnData["msg"] = "success"
+		returnData["data"] = token
+		c.JSON(http.StatusOK, returnData)
+		return
 	})
 
 	r.Run(":" + port)
@@ -388,4 +452,72 @@ func getAccHeaders(accessToken, uuid string, sessionId string, machineId string)
 		"Accept":                 "*/*",
 		"Accept-Encoding":        "gzip, deflate, br",
 	}
+}
+
+func getDeviceCode() (string, string, error) {
+	requestUrl := "https://github.com/login/device/code"
+
+	body := url.Values{}
+	headers := map[string]string{
+		"Accept": "application/json",
+	}
+
+	body.Set("client_id", client_id)
+	res, err := handleRequest("POST", body, requestUrl, headers)
+	deviceCode := gjson.Get(res, "device_code").String()
+	userCode := gjson.Get(res, "user_code").String()
+
+	if deviceCode == "" {
+		return "", "", fmt.Errorf("device code null")
+	}
+	if userCode == "" {
+		return "", "", fmt.Errorf("user code null")
+	}
+	return deviceCode, userCode, err
+}
+
+func checkUserCode(deviceCode string) (string, error) {
+	requestUrl := "https://github.com/login/oauth/access_token"
+	body := url.Values{}
+	headers := map[string]string{
+		"Accept": "application/json",
+	}
+
+	body.Set("client_id", client_id)
+	body.Set("device_code", deviceCode)
+	body.Set("grant_type", "urn:ietf:params:oauth:grant-type:device_code")
+	res, err := handleRequest("POST", body, requestUrl, headers)
+	fmt.Print(body)
+	fmt.Printf("")
+	fmt.Printf(res)
+	if err != nil {
+		return "", err
+	}
+	token := gjson.Get(res, "access_token").String()
+	return token, nil
+}
+
+func handleRequest(method string, body url.Values, requestUrl string, headers map[string]string) (string, error) {
+	fmt.Print(body, requestUrl)
+	client := &http.Client{}
+
+	req, err := http.NewRequest(method, requestUrl, bytes.NewBuffer([]byte(body.Encode())))
+	if err != nil {
+		return "", err
+	}
+	for key, value := range headers {
+		req.Header.Add(key, value)
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("status code: %d, read body error", resp.StatusCode)
+	}
+
+	return string(respBody), nil
 }
