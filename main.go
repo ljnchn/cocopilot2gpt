@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io"
 	"log"
 	"net/http"
@@ -43,7 +44,7 @@ type ModelList struct {
 	Data   []Model `json:"data"`
 }
 
-var version = "v0.5"
+var version = "v0.6"
 var port = "8081"
 var client_id = ""
 
@@ -58,6 +59,10 @@ func main() {
 	}
 
 	log.Printf("Server is running on port %s, version: %s\n", port, version)
+	client_id = os.Getenv("CLIENT_ID")
+	if client_id != "" {
+		log.Printf("client_id: %s\n", client_id)
+	}
 
 	gin.SetMode(gin.ReleaseMode)
 
@@ -110,9 +115,13 @@ func main() {
 	})
 
 	// 获取ghu
-	client_id = os.Getenv("CLIENT_ID")
 
-	r.LoadHTMLGlob("templates/**/*")
+	t, err := loadTemplate()
+	if err != nil {
+		panic(err)
+	}
+	r.SetHTMLTemplate(t)
+
 	r.GET("/auth", func(c *gin.Context) {
 		if client_id == "" {
 			c.String(http.StatusOK, `clent id null`)
@@ -129,8 +138,8 @@ func main() {
 		fmt.Println("Device Code: ", deviceCode)
 		fmt.Println("User Code: ", userCode)
 
-		c.HTML(http.StatusOK, "auth/index.tmpl", gin.H{
-			"title":      "auth index",
+		c.HTML(http.StatusOK, "/html/auth.tmpl", gin.H{
+			"title":      "Get Copilot Token",
 			"deviceCode": deviceCode,
 			"userCode":   userCode,
 		})
@@ -487,9 +496,6 @@ func checkUserCode(deviceCode string) (string, error) {
 	body.Set("device_code", deviceCode)
 	body.Set("grant_type", "urn:ietf:params:oauth:grant-type:device_code")
 	res, err := handleRequest("POST", body, requestUrl, headers)
-	fmt.Print(body)
-	fmt.Printf("")
-	fmt.Printf(res)
 	if err != nil {
 		return "", err
 	}
@@ -498,7 +504,6 @@ func checkUserCode(deviceCode string) (string, error) {
 }
 
 func handleRequest(method string, body url.Values, requestUrl string, headers map[string]string) (string, error) {
-	fmt.Print(body, requestUrl)
 	client := &http.Client{}
 
 	req, err := http.NewRequest(method, requestUrl, bytes.NewBuffer([]byte(body.Encode())))
@@ -520,4 +525,22 @@ func handleRequest(method string, body url.Values, requestUrl string, headers ma
 	}
 
 	return string(respBody), nil
+}
+
+func loadTemplate() (*template.Template, error) {
+	t := template.New("")
+	for name, file := range Assets.Files {
+		if file.IsDir() || !strings.HasSuffix(name, ".tmpl") {
+			continue
+		}
+		h, err := io.ReadAll(file)
+		if err != nil {
+			return nil, err
+		}
+		t, err = t.New(name).Parse(string(h))
+		if err != nil {
+			return nil, err
+		}
+	}
+	return t, nil
 }
