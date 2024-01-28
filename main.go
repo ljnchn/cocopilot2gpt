@@ -532,7 +532,7 @@ func checkGhuToken(ghuToken string) string {
 		"Host":                  "api.github.com",
 	}
 
-	res, err := handleRequest("POST", body, requestUrl, headers)
+	res, err := handleRequest("GET", body, requestUrl, headers)
 	if err != nil {
 		return "查询失败"
 	}
