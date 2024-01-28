@@ -46,7 +46,7 @@ type ModelList struct {
 
 var version = "v0.6"
 var port = "8081"
-var client_id = ""
+var client_id = "Iv1.b507a08c87ecfe98"
 
 func main() {
 	err := godotenv.Load()
@@ -59,10 +59,7 @@ func main() {
 	}
 
 	log.Printf("Server is running on port %s, version: %s\n", port, version)
-	client_id = os.Getenv("CLIENT_ID")
-	if client_id != "" {
-		log.Printf("client_id: %s\n", client_id)
-	}
+	log.Printf("client_id: %s\n", client_id)
 
 	gin.SetMode(gin.ReleaseMode)
 

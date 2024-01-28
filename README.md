@@ -14,9 +14,9 @@
 
 点击链接：[cocopilot](https://cocopilot.org/copilot/token)，根据提示拿到 ghu_xxxx 格式的 token。务必保存好，不要泄露给其他人。
 
-### 自己部署应用获取
+### 自己部署的应用获取
 
-`/auth`
+地址: `/auth`
 
 ## docker 部署
 
@@ -24,9 +24,6 @@
 
 docker run -d -p 8081:8081 ersichub/copilot2gpt
 
-- 部署授权服务
-
-docker run -d -p 8081:8081 -e CLIENT_ID="Iv1.b507a08c87ecfe98" ersichub/copilot2gpt  
 
 ```
 
