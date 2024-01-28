@@ -44,7 +44,7 @@ type ModelList struct {
 	Data   []Model `json:"data"`
 }
 
-var version = "v0.6"
+var version = "v0.6.1"
 var port = "8081"
 var client_id = "Iv1.b507a08c87ecfe98"
 
@@ -55,6 +55,7 @@ func main() {
 		portEnv := os.Getenv("PORT")
 		if portEnv != "" {
 			port = portEnv
+			version = os.Getenv("VERSION")
 		}
 	}
 
@@ -120,10 +121,6 @@ func main() {
 	r.SetHTMLTemplate(t)
 
 	r.GET("/auth", func(c *gin.Context) {
-		if client_id == "" {
-			c.String(http.StatusOK, `clent id null`)
-			return
-		}
 		// 获取设备授权码
 		deviceCode, userCode, err := getDeviceCode()
 		if err != nil {
@@ -148,11 +145,7 @@ func main() {
 			"msg":  "",
 			"data": "",
 		}
-		if client_id == "" {
-			returnData["msg"] = "clent id null"
-			c.JSON(http.StatusOK, returnData)
-			return
-		}
+
 		deviceCode := c.PostForm("deviceCode")
 		if deviceCode == "" {
 			returnData["msg"] = "device code null"
@@ -173,6 +166,34 @@ func main() {
 		returnData["code"] = "0"
 		returnData["msg"] = "success"
 		returnData["data"] = token
+		c.JSON(http.StatusOK, returnData)
+		return
+	})
+
+	r.POST("/auth/checkGhu", func(c *gin.Context) {
+		returnData := map[string]string{
+			"code": "1",
+			"msg":  "",
+			"data": "",
+		}
+
+		ghu := c.PostForm("ghu")
+		if ghu == "" {
+			returnData["msg"] = "ghu null"
+			c.JSON(http.StatusOK, returnData)
+			return
+		}
+		if !strings.HasPrefix(ghu, "gh") {
+			returnData["msg"] = "ghu 格式错误"
+			c.JSON(http.StatusOK, returnData)
+			return
+		}
+
+		info := checkGhuToken(ghu)
+
+		returnData["code"] = "0"
+		returnData["msg"] = "success"
+		returnData["data"] = info
 		c.JSON(http.StatusOK, returnData)
 		return
 	})
@@ -498,6 +519,29 @@ func checkUserCode(deviceCode string) (string, error) {
 	}
 	token := gjson.Get(res, "access_token").String()
 	return token, nil
+}
+
+func checkGhuToken(ghuToken string) string {
+	requestUrl := "https://api.github.com/copilot_internal/v2/token"
+	body := url.Values{}
+	headers := map[string]string{
+		"Authorization":         "Bearer " + ghuToken,
+		"editor-version":        "JetBrains-IU/232.10203.10",
+		"editor-plugin-version": "copilot-intellij/1.3.3.3572",
+		"User-Agent":            "GithubCopilot/1.129.0",
+		"Host":                  "api.github.com",
+	}
+
+	res, err := handleRequest("POST", body, requestUrl, headers)
+	if err != nil {
+		return "查询失败"
+	}
+	info := gjson.Get(res, "sku").String()
+	if info != "" {
+		return info
+	} else {
+		return "未订阅"
+	}
 }
 
 func handleRequest(method string, body url.Values, requestUrl string, headers map[string]string) (string, error) {

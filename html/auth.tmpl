@@ -7,7 +7,7 @@
 <!-- <button onclick="copyToClipboard()">复制</button> -->
 <p>输入：<input type="text" value="{{ .userCode }}" disabled="disabled" id="code" size="10"></p>
 <p>获取有延迟，填写完毕请勿刷新页面</p>
-<p>ghu: <input type="text" value="获取中" id="ghu" size="50"></p>
+<p>ghu: <input type="text" value="获取中" id="ghu" size="50"> &nbsp <button onclick="checkGhu(this)">检测</button></p>
 <script>
     var deviceCode = "{{ .deviceCode }}"
 
@@ -24,13 +24,11 @@
         formData.append("deviceCode", deviceCode);
 
         xhr.onreadystatechange = function () {
-            console.log(xhr.responseText);
             if (xhr.status >= 200 && xhr.status < 300) {
-                if (xhr.responseText.length > 0) {                    
+                if (xhr.responseText.length > 0) {
                     try {
                         var data = JSON.parse(xhr.responseText);
                         // 现在你可以使用解析后的数据了
-                        console.log(data);
                         if (data.code == "0") {
                             stopPolling();
                             var inputElement = document.getElementById('ghu');
@@ -69,6 +67,42 @@
                 console.error('Failed to copy: ', err);
             }
         }
+    }
+
+    function checkGhu(btn) {
+        btn.disabled = true;
+
+        var ghu = document.getElementById('ghu').value;
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/auth/checkGhu", true);
+        var formData = new FormData();
+        formData.append("ghu", ghu);
+
+        xhr.onreadystatechange = function () {
+            // 请求结束，无论成功还是失败，都重新启用按钮
+            if (xhr.readyState == 4) {
+                btn.disabled = false;
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    if (xhr.responseText.length > 0) {
+                        try {
+                            var data = JSON.parse(xhr.responseText);
+                            // 现在你可以使用解析后的数据了
+                            if (data.code == "0") {
+                                alert(data.data);
+                            } else {
+                                alert(data.msg);
+                            }
+                        } catch (e) {
+                            console.error("解析JSON数据时出错: ", e);
+                        }
+                    }
+                } else {
+                    console.error("请求失败，HTTP状态码: ", xhr.status);
+                }
+            }
+
+        };
+        xhr.send(formData);
     }
 
 </script>
