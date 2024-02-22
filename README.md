@@ -1,13 +1,6 @@
 # 将你的 copilot 转成 ChatGPT API（支持GPT4）
 
 
-
-## 使用声明❗❗❗
-
-> 本项目可能导致你的 copilt 账号被封，请谨慎使用。
-
-
-
 ## ghu token 获取
 
 ### 通过 cocoilot 获取
@@ -16,7 +9,7 @@
 
 ### 自己部署的应用获取
 
-地址: `/auth`
+地址: `http://localhost:8081/auth`
 
 ## docker 部署
 
