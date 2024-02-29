@@ -1,6 +1,13 @@
 # 将你的 copilot 转成 ChatGPT API（支持GPT4）
 
-
+> [!IMPORTANT]
+> ✨ 支持单文件部署及 docker 一键部署，简单高效
+> 
+> ✨ 自带获取 ghu、检测 ghu 订阅类型页面
+> 
+> 
+> ✨ 支持中转 ghu 转 api ，即开即用
+> 
 ## ghu token 获取
 
 ### 通过 cocoilot 获取
@@ -14,6 +21,7 @@
 ## docker 部署
 
 ``` shell
+
 
 docker run -d -p 8081:8081 ersichub/copilot2gpt
 
